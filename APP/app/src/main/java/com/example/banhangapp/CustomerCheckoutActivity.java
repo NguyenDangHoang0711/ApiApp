@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.banhangapp.api.ApiService;
 import com.example.banhangapp.api.RetrofitClient;
+import com.example.banhangapp.models.Cart;
 import com.example.banhangapp.models.Order;
 import com.example.banhangapp.utils.SharedPreferencesHelper;
 import com.google.android.material.appbar.MaterialToolbar;
@@ -64,6 +65,51 @@ public class CustomerCheckoutActivity extends AppCompatActivity {
         }
 
         String token = prefsHelper.getToken();
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // First verify cart has items before placing order
+        android.util.Log.d("CheckoutActivity", "Verifying cart before placing order...");
+        verifyCartBeforeOrder(token, paymentMethod, address, promotionCode);
+    }
+    
+    private void verifyCartBeforeOrder(String token, String paymentMethod, String address, String promotionCode) {
+        Call<com.example.banhangapp.models.Cart> cartCall = apiService.getCart(token);
+        cartCall.enqueue(new Callback<com.example.banhangapp.models.Cart>() {
+            @Override
+            public void onResponse(Call<com.example.banhangapp.models.Cart> call, Response<com.example.banhangapp.models.Cart> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    com.example.banhangapp.models.Cart cart = response.body();
+                    int itemCount = cart.getItems() != null ? cart.getItems().size() : 0;
+                    android.util.Log.d("CheckoutActivity", "Cart verified. Item count: " + itemCount);
+                    
+                    if (itemCount == 0) {
+                        Toast.makeText(CustomerCheckoutActivity.this, "Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    
+                    // Cart has items, proceed with order
+                    placeOrderRequest(token, paymentMethod, address, promotionCode);
+                } else {
+                    String errorMsg = "Lỗi kiểm tra giỏ hàng: Code " + response.code();
+                    android.util.Log.e("CheckoutActivity", errorMsg);
+                    Toast.makeText(CustomerCheckoutActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.example.banhangapp.models.Cart> call, Throwable t) {
+                android.util.Log.e("CheckoutActivity", "Error verifying cart", t);
+                Toast.makeText(CustomerCheckoutActivity.this, "Lỗi kiểm tra giỏ hàng: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    
+    private void placeOrderRequest(String token, String paymentMethod, String address, String promotionCode) {
+        android.util.Log.d("CheckoutActivity", "Placing order with: paymentMethod=" + paymentMethod + ", address=" + address + ", promotionCode=" + promotionCode);
+        
         ApiService.OrderRequest request = new ApiService.OrderRequest(paymentMethod, address, promotionCode);
         Call<Order> call = apiService.createOrder(token, request);
 

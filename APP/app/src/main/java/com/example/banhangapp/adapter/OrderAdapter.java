@@ -19,6 +19,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
     private List<Order> orders;
     private OnOrderClickListener listener;
+    private boolean allowStatusUpdate; // Flag to control if status update button should be shown
 
     public interface OnOrderClickListener {
         void onOrderClick(Order order);
@@ -26,8 +27,13 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     }
 
     public OrderAdapter(OnOrderClickListener listener) {
+        this(listener, false); // Default: don't allow status update
+    }
+
+    public OrderAdapter(OnOrderClickListener listener, boolean allowStatusUpdate) {
         this.orders = new ArrayList<>();
         this.listener = listener;
+        this.allowStatusUpdate = allowStatusUpdate;
     }
 
     @NonNull
@@ -58,10 +64,10 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     class OrderViewHolder extends RecyclerView.ViewHolder {
         private TextView tvOrderId;
         private TextView tvTotalAmount;
-        private TextView tvStatus;
+        private com.google.android.material.chip.Chip tvStatus;
         private TextView tvDate;
         private TextView tvItemCount;
-        private TextView btnUpdateStatus;
+        private com.google.android.material.button.MaterialButton btnUpdateStatus;
 
         public OrderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -85,38 +91,45 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
 
             if (tvTotalAmount != null) {
                 NumberFormat format = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-                tvTotalAmount.setText("Tổng: " + format.format(order.getFinalAmount()));
+                tvTotalAmount.setText(format.format(order.getFinalAmount()));
             }
 
             if (tvStatus != null) {
                 String status = order.getStatus() != null ? order.getStatus() : "pending";
                 String statusText = "";
-                int statusColor = android.R.color.black;
+                int chipBackgroundColor = R.color.info_light;
+                int chipStrokeColor = R.color.info;
                 
                 switch (status) {
                     case "pending":
-                        statusText = "Chờ xử lý";
-                        statusColor = android.R.color.holo_orange_dark;
+                        statusText = "⏳ Chờ xử lý";
+                        chipBackgroundColor = R.color.warning_light;
+                        chipStrokeColor = R.color.warning;
                         break;
                     case "confirmed":
-                        statusText = "Đã xác nhận";
-                        statusColor = android.R.color.holo_blue_dark;
+                        statusText = "✅ Đã xác nhận";
+                        chipBackgroundColor = R.color.info_light;
+                        chipStrokeColor = R.color.info;
                         break;
                     case "shipping":
-                        statusText = "Đang giao";
-                        statusColor = android.R.color.holo_blue_light;
+                        statusText = "🚚 Đang giao";
+                        chipBackgroundColor = R.color.info_light;
+                        chipStrokeColor = R.color.info;
                         break;
                     case "delivered":
-                        statusText = "Đã giao";
-                        statusColor = android.R.color.holo_green_dark;
+                        statusText = "🎉 Đã giao";
+                        chipBackgroundColor = R.color.success_light;
+                        chipStrokeColor = R.color.success;
                         break;
                     case "cancelled":
-                        statusText = "Đã hủy";
-                        statusColor = android.R.color.holo_red_dark;
+                        statusText = "❌ Đã hủy";
+                        chipBackgroundColor = R.color.error_light;
+                        chipStrokeColor = R.color.error;
                         break;
                 }
                 tvStatus.setText(statusText);
-                tvStatus.setTextColor(itemView.getContext().getColor(statusColor));
+                tvStatus.setChipBackgroundColorResource(chipBackgroundColor);
+                tvStatus.setChipStrokeColorResource(chipStrokeColor);
             }
 
             if (tvDate != null && order.getCreatedAt() != null) {
@@ -125,37 +138,47 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             }
 
             if (tvItemCount != null && order.getItems() != null) {
-                tvItemCount.setText(order.getItems().size() + " sản phẩm");
+                int totalItems = 0;
+                for (Order.OrderItem item : order.getItems()) {
+                    totalItems += item.getQuantity();
+                }
+                tvItemCount.setText(totalItems + " sản phẩm");
             }
 
             if (btnUpdateStatus != null) {
-                String currentStatus = order.getStatus();
-                if ("pending".equals(currentStatus)) {
-                    btnUpdateStatus.setText("Xác nhận");
-                    btnUpdateStatus.setVisibility(View.VISIBLE);
-                    btnUpdateStatus.setOnClickListener(v -> {
-                        if (listener != null) {
-                            listener.onOrderStatusChange(order, "confirmed");
-                        }
-                    });
-                } else if ("confirmed".equals(currentStatus)) {
-                    btnUpdateStatus.setText("Bắt đầu giao");
-                    btnUpdateStatus.setVisibility(View.VISIBLE);
-                    btnUpdateStatus.setOnClickListener(v -> {
-                        if (listener != null) {
-                            listener.onOrderStatusChange(order, "shipping");
-                        }
-                    });
-                } else if ("shipping".equals(currentStatus)) {
-                    btnUpdateStatus.setText("Hoàn thành");
-                    btnUpdateStatus.setVisibility(View.VISIBLE);
-                    btnUpdateStatus.setOnClickListener(v -> {
-                        if (listener != null) {
-                            listener.onOrderStatusChange(order, "delivered");
-                        }
-                    });
-                } else {
+                // Hide status update button for customers
+                if (!allowStatusUpdate) {
                     btnUpdateStatus.setVisibility(View.GONE);
+                } else {
+                    // Only show for sellers/admins
+                    String currentStatus = order.getStatus();
+                    if ("pending".equals(currentStatus)) {
+                        btnUpdateStatus.setText("Xác nhận");
+                        btnUpdateStatus.setVisibility(View.VISIBLE);
+                        btnUpdateStatus.setOnClickListener(v -> {
+                            if (listener != null) {
+                                listener.onOrderStatusChange(order, "confirmed");
+                            }
+                        });
+                    } else if ("confirmed".equals(currentStatus)) {
+                        btnUpdateStatus.setText("Bắt đầu giao");
+                        btnUpdateStatus.setVisibility(View.VISIBLE);
+                        btnUpdateStatus.setOnClickListener(v -> {
+                            if (listener != null) {
+                                listener.onOrderStatusChange(order, "shipping");
+                            }
+                        });
+                    } else if ("shipping".equals(currentStatus)) {
+                        btnUpdateStatus.setText("Hoàn thành");
+                        btnUpdateStatus.setVisibility(View.VISIBLE);
+                        btnUpdateStatus.setOnClickListener(v -> {
+                            if (listener != null) {
+                                listener.onOrderStatusChange(order, "delivered");
+                            }
+                        });
+                    } else {
+                        btnUpdateStatus.setVisibility(View.GONE);
+                    }
                 }
             }
 

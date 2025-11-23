@@ -47,7 +47,7 @@ public class SellerTrackSalesActivity extends AppCompatActivity {
             public void onOrderStatusChange(Order order, String newStatus) {
                 updateOrderStatus(order, newStatus);
             }
-        });
+        }, true); // Allow status update for sellers
         recyclerView.setAdapter(adapter);
 
         loadOrders();

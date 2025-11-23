@@ -4,9 +4,10 @@ package com.example.banhangapp.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
@@ -18,7 +19,10 @@ import java.lang.String;
 
 public final class ActivityCustomerOrderHistoryBinding implements ViewBinding {
   @NonNull
-  private final ConstraintLayout rootView;
+  private final CoordinatorLayout rootView;
+
+  @NonNull
+  public final LinearLayout emptyState;
 
   @NonNull
   public final RecyclerView recyclerViewOrders;
@@ -26,16 +30,18 @@ public final class ActivityCustomerOrderHistoryBinding implements ViewBinding {
   @NonNull
   public final MaterialToolbar toolbar;
 
-  private ActivityCustomerOrderHistoryBinding(@NonNull ConstraintLayout rootView,
-      @NonNull RecyclerView recyclerViewOrders, @NonNull MaterialToolbar toolbar) {
+  private ActivityCustomerOrderHistoryBinding(@NonNull CoordinatorLayout rootView,
+      @NonNull LinearLayout emptyState, @NonNull RecyclerView recyclerViewOrders,
+      @NonNull MaterialToolbar toolbar) {
     this.rootView = rootView;
+    this.emptyState = emptyState;
     this.recyclerViewOrders = recyclerViewOrders;
     this.toolbar = toolbar;
   }
 
   @Override
   @NonNull
-  public ConstraintLayout getRoot() {
+  public CoordinatorLayout getRoot() {
     return rootView;
   }
 
@@ -60,6 +66,12 @@ public final class ActivityCustomerOrderHistoryBinding implements ViewBinding {
     // This is done to optimize the compiled bytecode for size and performance.
     int id;
     missingId: {
+      id = R.id.emptyState;
+      LinearLayout emptyState = ViewBindings.findChildViewById(rootView, id);
+      if (emptyState == null) {
+        break missingId;
+      }
+
       id = R.id.recyclerViewOrders;
       RecyclerView recyclerViewOrders = ViewBindings.findChildViewById(rootView, id);
       if (recyclerViewOrders == null) {
@@ -72,7 +84,7 @@ public final class ActivityCustomerOrderHistoryBinding implements ViewBinding {
         break missingId;
       }
 
-      return new ActivityCustomerOrderHistoryBinding((ConstraintLayout) rootView,
+      return new ActivityCustomerOrderHistoryBinding((CoordinatorLayout) rootView, emptyState,
           recyclerViewOrders, toolbar);
     }
     String missingId = rootView.getResources().getResourceName(id);

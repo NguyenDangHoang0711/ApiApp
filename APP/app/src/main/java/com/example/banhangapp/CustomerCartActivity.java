@@ -3,6 +3,7 @@ package com.example.banhangapp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,6 +48,7 @@ public class CustomerCartActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerViewCart);
         tvTotal = findViewById(R.id.tvTotal);
         btnCheckout = findViewById(R.id.btnCheckout);
+        View emptyState = findViewById(R.id.emptyState);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setHasFixedSize(false);
@@ -123,10 +125,18 @@ public class CustomerCartActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        if (cart != null && cart.getItems() != null) {
+        View emptyState = findViewById(R.id.emptyState);
+        
+        if (cart != null && cart.getItems() != null && !cart.getItems().isEmpty()) {
             // Update adapter with cart items
             adapter.updateCartItems(cart.getItems());
             android.util.Log.d("CartActivity", "Adapter updated with " + cart.getItems().size() + " items");
+            
+            // Show RecyclerView, hide empty state
+            recyclerView.setVisibility(View.VISIBLE);
+            if (emptyState != null) {
+                emptyState.setVisibility(View.GONE);
+            }
             
             // Calculate total
             double total = 0;
@@ -135,10 +145,18 @@ public class CustomerCartActivity extends AppCompatActivity {
                     total += item.getProductId().getPrice() * item.getQuantity();
                 }
             }
-            tvTotal.setText(String.format("Tổng: %,.0f VNĐ", total));
+            tvTotal.setText(String.format("%,.0f đ", total));
         } else {
             adapter.updateCartItems(new java.util.ArrayList<>());
-            tvTotal.setText("Tổng: 0 VNĐ");
+            tvTotal.setText("0 đ");
+            
+            // Hide RecyclerView, show empty state
+            recyclerView.setVisibility(View.GONE);
+            if (emptyState != null) {
+                emptyState.setVisibility(View.VISIBLE);
+            }
+            
+            android.util.Log.d("CartActivity", "Cart is empty, showing empty state");
         }
     }
     

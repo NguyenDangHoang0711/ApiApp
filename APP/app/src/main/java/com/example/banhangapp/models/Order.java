@@ -1,5 +1,9 @@
 package com.example.banhangapp.models;
 
+import com.example.banhangapp.utils.CustomerIdDeserializer;
+import com.example.banhangapp.utils.ProductIdDeserializer;
+import com.example.banhangapp.utils.SellerIdDeserializer;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import java.util.Date;
 import java.util.List;
@@ -9,10 +13,12 @@ public class Order {
     private String id;
     
     @SerializedName("customerId")
-    private String customerId;
+    @JsonAdapter(CustomerIdDeserializer.class)
+    private CustomerInfo customerId;
     
     @SerializedName("sellerId")
-    private String sellerId;
+    @JsonAdapter(SellerIdDeserializer.class)
+    private SellerInfo sellerId;  // Can be SellerInfo object or null
     
     @SerializedName("items")
     private List<OrderItem> items;
@@ -46,7 +52,8 @@ public class Order {
 
     public static class OrderItem {
         @SerializedName("productId")
-        private String productId;
+        @JsonAdapter(ProductIdDeserializer.class)
+        private Product productId;  // Can be Product object or String ID
         
         @SerializedName("quantity")
         private int quantity;
@@ -54,8 +61,8 @@ public class Order {
         @SerializedName("price")
         private double price;
 
-        public String getProductId() { return productId; }
-        public void setProductId(String productId) { this.productId = productId; }
+        public Product getProductId() { return productId; }
+        public void setProductId(Product productId) { this.productId = productId; }
 
         public int getQuantity() { return quantity; }
         public void setQuantity(int quantity) { this.quantity = quantity; }
@@ -69,11 +76,23 @@ public class Order {
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getCustomerId() { return customerId; }
-    public void setCustomerId(String customerId) { this.customerId = customerId; }
+    public CustomerInfo getCustomerId() { return customerId; }
+    public void setCustomerId(CustomerInfo customerId) { this.customerId = customerId; }
+    
+    // Helper method to get customer ID as string
+    public String getCustomerIdString() {
+        if (customerId == null) return null;
+        return customerId.getId();
+    }
 
-    public String getSellerId() { return sellerId; }
-    public void setSellerId(String sellerId) { this.sellerId = sellerId; }
+    public SellerInfo getSellerId() { return sellerId; }
+    public void setSellerId(SellerInfo sellerId) { this.sellerId = sellerId; }
+    
+    // Helper method to get seller ID as string
+    public String getSellerIdString() {
+        if (sellerId == null) return null;
+        return sellerId.getId();
+    }
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }

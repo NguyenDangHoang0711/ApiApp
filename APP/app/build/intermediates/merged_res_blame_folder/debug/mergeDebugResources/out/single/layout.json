@@ -20,10 +20,6 @@
         "source": "C:\\Users\\hoang\\.gradle\\daemon\\8.13\\com.example.banhangapp-main-36:\\layout\\activity_seller_manage_inventory.xml"
     },
     {
-        "merged": "com.example.banhangapp-mergeDebugResources-33:/layout/activity_login.xml",
-        "source": "com.example.banhangapp-main-36:/layout/activity_login.xml"
-    },
-    {
         "merged": "C:\\Users\\hoang\\.gradle\\daemon\\8.13\\com.example.banhangapp-mergeDebugResources-33:\\layout\\activity_seller_track_sales.xml",
         "source": "C:\\Users\\hoang\\.gradle\\daemon\\8.13\\com.example.banhangapp-main-36:\\layout\\activity_seller_track_sales.xml"
     },
@@ -104,8 +100,8 @@
         "source": "C:\\Users\\hoang\\.gradle\\daemon\\8.13\\com.example.banhangapp-main-36:\\layout\\activity_seller_manage_customers.xml"
     },
     {
-        "merged": "com.example.banhangapp-mergeDebugResources-33:/layout/activity_register.xml",
-        "source": "com.example.banhangapp-main-36:/layout/activity_register.xml"
+        "merged": "com.example.banhangapp-mergeDebugResources-33:/layout/activity_customer_order_history.xml",
+        "source": "com.example.banhangapp-main-36:/layout/activity_customer_order_history.xml"
     },
     {
         "merged": "C:\\Users\\hoang\\.gradle\\daemon\\8.13\\com.example.banhangapp-mergeDebugResources-33:\\layout\\activity_seller_manage_promotions.xml",
