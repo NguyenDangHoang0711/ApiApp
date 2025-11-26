@@ -60,7 +60,7 @@ const API_BASE_URL = 'http://localhost:3000'; // Thay đổi theo server của b
 ## Chức năng
 
 - **Quản lý khách hàng**: Xem, thêm, sửa, xóa khách hàng
-- **Quản lý người bán**: Xem, thêm, sửa, xóa người bán
+- **Quản lý sản phẩm**: Xem, thêm, sửa, xóa sản phẩm
 - **Theo dõi hoạt động**: Xem và xử lý các báo cáo
 
 ## Lưu ý

@@ -19,7 +19,7 @@ HƯỚNG DẪN SỬ DỤNG
 
 4. Sau khi đăng nhập, bạn có thể:
    - Quản lý khách hàng
-   - Quản lý người bán
+   - Quản lý sản phẩm
    - Theo dõi hoạt động và báo cáo
 
 ===========================================

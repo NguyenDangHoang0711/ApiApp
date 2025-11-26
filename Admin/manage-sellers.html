@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý người bán</title>
+    <title>Quản lý sản phẩm</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,75 +12,80 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <h1>Quản lý người bán</h1>
+            <h1>Quản lý sản phẩm</h1>
             <div class="nav-actions">
                 <button onclick="window.location.href='dashboard.html'" class="btn btn-secondary">🏠 Về Dashboard</button>
-                <button onclick="showAddUserDialog()" class="btn btn-primary">➕ Thêm người bán</button>
+                <button onclick="showAddProductDialog()" class="btn btn-primary">➕ Thêm sản phẩm</button>
             </div>
         </div>
     </nav>
     
     <div class="container">
         <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm theo tên hoặc email..." onkeyup="loadSellers()">
+            <input type="text" id="searchInput" placeholder="🔍 Tìm kiếm theo tên sản phẩm..." onkeyup="loadProducts()">
         </div>
         
         <div class="table-container">
-            <table id="sellersTable">
+            <table id="productsTable">
                 <thead>
                     <tr>
-                        <th>Tên</th>
-                        <th>Email</th>
-                        <th>Số điện thoại</th>
-                        <th>Địa chỉ</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Giá</th>
+                        <th>Danh mục</th>
+                        <th>Người bán</th>
+                        <th>Số lượng</th>
                         <th>Trạng thái</th>
                         <th>Thao tác</th>
                     </tr>
                 </thead>
-                <tbody id="sellersTableBody">
-                    <tr><td colspan="6" class="loading">Đang tải...</td></tr>
+                <tbody id="productsTableBody">
+                    <tr><td colspan="7" class="loading">Đang tải...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
     
-    <!-- Add/Edit User Dialog -->
-    <div id="userDialog" class="modal">
+    <!-- Add/Edit Product Dialog -->
+    <div id="productDialog" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeUserDialog()">&times;</span>
-            <h2 id="dialogTitle">Thêm người bán</h2>
-            <form id="userForm">
-                <input type="hidden" id="userId">
+            <span class="close" onclick="closeProductDialog()">&times;</span>
+            <h2 id="dialogTitle">Thêm sản phẩm</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
                 <div class="form-group">
-                    <label for="userName">Họ và tên *</label>
-                    <input type="text" id="userName" required>
+                    <label for="productName">Tên sản phẩm *</label>
+                    <input type="text" id="productName" required>
                 </div>
                 <div class="form-group">
-                    <label for="userEmail">Email *</label>
-                    <input type="email" id="userEmail" required>
+                    <label for="productDescription">Mô tả</label>
+                    <textarea id="productDescription" rows="3"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="userPassword">Mật khẩu <span id="passwordHint">*</span></label>
-                    <input type="password" id="userPassword">
+                    <label for="productPrice">Giá *</label>
+                    <input type="number" id="productPrice" min="0" step="0.01" required>
                 </div>
                 <div class="form-group">
-                    <label for="userPhone">Số điện thoại</label>
-                    <input type="tel" id="userPhone">
+                    <label for="productCategory">Danh mục</label>
+                    <input type="text" id="productCategory" placeholder="Ví dụ: Điện tử, Thời trang, Thực phẩm...">
                 </div>
                 <div class="form-group">
-                    <label for="userAddress">Địa chỉ</label>
-                    <textarea id="userAddress" rows="3"></textarea>
+                    <label for="productQuantity">Số lượng *</label>
+                    <input type="number" id="productQuantity" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="productSeller">Người bán (ID)</label>
+                    <input type="text" id="productSeller" placeholder="ID người bán">
                 </div>
                 <div class="form-group">
                     <label>Trạng thái</label>
                     <div class="radio-group">
-                        <label><input type="radio" name="userStatus" value="true" checked> Hoạt động</label>
-                        <label><input type="radio" name="userStatus" value="false"> Không hoạt động</label>
+                        <label><input type="radio" name="productStatus" value="true" checked> Hoạt động</label>
+                        <label><input type="radio" name="productStatus" value="false"> Không hoạt động</label>
                     </div>
                 </div>
                 <div id="formError" class="error-message"></div>
                 <div class="form-actions">
-                    <button type="button" onclick="closeUserDialog()" class="btn btn-secondary">Hủy</button>
+                    <button type="button" onclick="closeProductDialog()" class="btn btn-secondary">Hủy</button>
                     <button type="submit" class="btn btn-primary">Lưu</button>
                 </div>
             </form>
@@ -90,18 +95,21 @@
     <script src="admin.js"></script>
     <script>
         checkAuth();
-        loadSellers();
+        loadProducts();
         
-        let editingUser = null;
+        let editingProduct = null;
         
-        async function loadSellers() {
+        async function loadProducts() {
             const search = document.getElementById('searchInput').value;
             const token = localStorage.getItem('adminToken');
-            const params = new URLSearchParams({ role: 'seller' });
+            const params = new URLSearchParams();
             if (search) params.append('search', search);
             
             try {
-                const response = await fetch(`${API_BASE_URL}/api/users?${params}`, {
+                const url = params.toString() 
+                    ? `${API_BASE_URL}/api/products?${params}`
+                    : `${API_BASE_URL}/api/products`;
+                const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -110,80 +118,79 @@
                     return;
                 }
                 
-                const sellers = await response.json();
-                displaySellers(sellers);
+                const products = await response.json();
+                displayProducts(products);
             } catch (error) {
-                document.getElementById('sellersTableBody').innerHTML = 
-                    '<tr><td colspan="6" class="error">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
+                document.getElementById('productsTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="error">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
             }
         }
         
-        function displaySellers(sellers) {
-            const tbody = document.getElementById('sellersTableBody');
-            if (sellers.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>';
+        function displayProducts(products) {
+            const tbody = document.getElementById('productsTableBody');
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>';
                 return;
             }
             
-            tbody.innerHTML = sellers.map(seller => `
+            tbody.innerHTML = products.map(product => `
                 <tr>
-                    <td>${seller.name || ''}</td>
-                    <td>${seller.email || ''}</td>
-                    <td>${seller.phone || ''}</td>
-                    <td>${seller.address || ''}</td>
-                    <td><span class="badge ${seller.isActive ? 'badge-success' : 'badge-danger'}">${seller.isActive ? 'Hoạt động' : 'Không hoạt động'}</span></td>
+                    <td>${product.name || ''}</td>
+                    <td>${product.price ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.price) : 'N/A'}</td>
+                    <td>${product.category || 'N/A'}</td>
+                    <td>${product.sellerId || product.seller ? (product.seller?.name || product.sellerId) : 'N/A'}</td>
+                    <td>${product.quantity || 0}</td>
+                    <td><span class="badge ${product.isActive !== false ? 'badge-success' : 'badge-danger'}">${product.isActive !== false ? 'Hoạt động' : 'Không hoạt động'}</span></td>
                     <td>
-                        <button onclick="editUser('${seller._id}')" class="btn btn-sm btn-primary">Sửa</button>
-                        <button onclick="deleteUser('${seller._id}', '${seller.name}')" class="btn btn-sm btn-danger">Xóa</button>
+                        <button onclick="editProduct('${product._id}')" class="btn btn-sm btn-primary">Sửa</button>
+                        <button onclick="deleteProduct('${product._id}', '${(product.name || '').replace(/'/g, "\\'")}')" class="btn btn-sm btn-danger">Xóa</button>
                     </td>
                 </tr>
             `).join('');
         }
         
-        async function editUser(userId) {
+        async function editProduct(productId) {
             const token = localStorage.getItem('adminToken');
             try {
-                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                const user = await response.json();
+                const product = await response.json();
                 
-                editingUser = user;
-                document.getElementById('dialogTitle').textContent = 'Sửa người bán';
-                document.getElementById('userId').value = user._id;
-                document.getElementById('userName').value = user.name || '';
-                document.getElementById('userEmail').value = user.email || '';
-                document.getElementById('userEmail').disabled = true;
-                document.getElementById('userPassword').value = '';
-                document.getElementById('userPassword').required = false;
-                document.getElementById('passwordHint').textContent = '(để trống nếu không đổi)';
-                document.getElementById('userPhone').value = user.phone || '';
-                document.getElementById('userAddress').value = user.address || '';
-                document.querySelector(`input[name="userStatus"][value="${user.isActive}"]`).checked = true;
-                showModal('userDialog');
+                editingProduct = product;
+                document.getElementById('dialogTitle').textContent = 'Sửa sản phẩm';
+                document.getElementById('productId').value = product._id;
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productCategory').value = product.category || '';
+                document.getElementById('productQuantity').value = product.quantity || 0;
+                document.getElementById('productSeller').value = product.sellerId || product.seller?._id || '';
+                document.querySelector(`input[name="productStatus"][value="${product.isActive !== false}"]`).checked = true;
+                showModal('productDialog');
             } catch (error) {
                 alert('Lỗi tải thông tin: ' + error.message);
             }
         }
         
-        document.getElementById('userForm').addEventListener('submit', async (e) => {
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('adminToken');
             const formData = {
-                name: document.getElementById('userName').value,
-                email: document.getElementById('userEmail').value,
-                phone: document.getElementById('userPhone').value,
-                address: document.getElementById('userAddress').value,
-                role: 'seller',
-                isActive: document.querySelector('input[name="userStatus"]:checked').value === 'true'
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                category: document.getElementById('productCategory').value,
+                quantity: parseInt(document.getElementById('productQuantity').value),
+                isActive: document.querySelector('input[name="productStatus"]:checked').value === 'true'
             };
             
-            const password = document.getElementById('userPassword').value;
-            if (password) formData.password = password;
+            const sellerId = document.getElementById('productSeller').value.trim();
+            if (sellerId) formData.sellerId = sellerId;
             
-            const userId = document.getElementById('userId').value;
-            const url = userId ? `${API_BASE_URL}/api/users/${userId}` : `${API_BASE_URL}/api/users`;
-            const method = userId ? 'PUT' : 'POST';
+            const productId = document.getElementById('productId').value;
+            const url = productId ? `${API_BASE_URL}/api/products/${productId}` : `${API_BASE_URL}/api/products`;
+            const method = productId ? 'PUT' : 'POST';
             
             try {
                 const response = await fetch(url, {
@@ -202,9 +209,9 @@
                 
                 const data = await response.json();
                 if (response.ok) {
-                    closeUserDialog();
-                    showSuccess(userId ? 'Đã cập nhật người bán thành công!' : 'Đã thêm người bán thành công!', document.querySelector('.container'));
-                    loadSellers();
+                    closeProductDialog();
+                    showSuccess(productId ? 'Đã cập nhật sản phẩm thành công!' : 'Đã thêm sản phẩm thành công!', document.querySelector('.container'));
+                    loadProducts();
                 } else {
                     document.getElementById('formError').textContent = data.error || 'Có lỗi xảy ra';
                     document.getElementById('formError').style.display = 'block';
@@ -215,12 +222,12 @@
             }
         });
         
-        async function deleteUser(userId, userName) {
-            if (!confirm(`Bạn có chắc muốn xóa người bán "${userName}"?`)) return;
+        async function deleteProduct(productId, productName) {
+            if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${productName}"?`)) return;
             
             const token = localStorage.getItem('adminToken');
             try {
-                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -231,8 +238,8 @@
                 }
                 
                 if (response.ok) {
-                    showSuccess('Đã xóa người bán thành công!', document.querySelector('.container'));
-                    loadSellers();
+                    showSuccess('Đã xóa sản phẩm thành công!', document.querySelector('.container'));
+                    loadProducts();
                 } else {
                     const data = await response.json();
                     alert('Lỗi: ' + (data.error || 'Không thể xóa'));
@@ -242,23 +249,19 @@
             }
         }
         
-        function closeUserDialog() {
-            hideModal('userDialog');
+        function closeProductDialog() {
+            hideModal('productDialog');
             document.getElementById('formError').style.display = 'none';
         }
         
-        function showAddUserDialog() {
-            editingUser = null;
-            document.getElementById('dialogTitle').textContent = 'Thêm người bán';
-            document.getElementById('userForm').reset();
-            document.getElementById('userId').value = '';
-            document.getElementById('userEmail').disabled = false;
-            document.getElementById('passwordHint').textContent = '*';
-            document.getElementById('userPassword').required = true;
-            document.querySelector('input[name="userStatus"][value="true"]').checked = true;
-            showModal('userDialog');
+        function showAddProductDialog() {
+            editingProduct = null;
+            document.getElementById('dialogTitle').textContent = 'Thêm sản phẩm';
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.querySelector('input[name="productStatus"][value="true"]').checked = true;
+            showModal('productDialog');
         }
     </script>
 </body>
 </html>
-
